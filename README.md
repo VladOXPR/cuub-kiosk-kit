@@ -1,9 +1,11 @@
 # CUUB kiosk kit
 
-Sets up a station's kiosk tablet for CUUB, start to finish: installs the CUUB
-pilot app, removes Relink, configures Android, and checks the kiosk, the card
-reader and the cabinet in cuub-api. Everything it needs is in this folder,
-except the Google Cloud CLI.
+Moves a station from Relink to CUUB. `cabinet/` points the cabinet at the CUUB
+broker from a Windows VM. `setup-kiosk.sh` then sets up the kiosk tablet:
+installs the CUUB pilot app, removes Relink, configures Android, and checks
+the kiosk, the card reader and the cabinet in cuub-api. Everything is in this
+folder except the Google Cloud CLI, Parallels (Windows), and a supplier login
+for the cabinet tool.
 
 ## Once per computer
 
@@ -20,19 +22,12 @@ gcloud auth login
 
 Use a Google account with access to the `keyextract-482721` project.
 
-## Cabinet (WriteMQTTSNTool, before the script)
+## Cabinet (Windows, before the script)
 
-The broker CA for **WriteFile** is `cabinet/cuub-mqtt-ca.crt` in this folder.
-WriteMQTTSNTool runs in Windows (Parallels) and cannot open Mac paths; there
-your Mac home folder is `\\Mac\Home`. With this folder in `~/Desktop`, paste:
-
-```text
-\\Mac\Home\Desktop\cuub-kiosk-kit\cabinet\cuub-mqtt-ca.crt
-```
-
-The rest of the write: **WriteSecurity** user = station ID, password = the
-dashboard's Broker login card, SSL type `2`. **WriteAddress** `mqtt.cuub.tech`,
-port `8883`. Read each back, then power-cycle the station.
+`cabinet/` holds WriteMQTTSNTool, the debug-cable driver, the broker CA and
+the supplier's guide. [`cabinet/README.md`](cabinet/README.md) has the steps:
+set up the Windows VM once, then for each station back up Relink's settings,
+write CUUB's, and power-cycle.
 
 ## Per station
 
