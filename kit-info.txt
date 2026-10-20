@@ -1,0 +1,7 @@
+CUUB kiosk kit
+built        2026-10-20T17:50:28Z by vlad.valchkou@cuub.tech
+app          com.cuub.station 1.0.1-pilot (self-updater off, CUUB gateway mode)
+apk sha256   34dce0c1938e268ca08f289fb0aebcc1a74fe3daed6c274d5167ace9de9b9e1f
+app source   a5b3563a
+broker CA    CN=CUUB MQTT Device CA, O=CUUB, expires Dec 31 00:00:00 2039 GMT
+adb          platform-tools 37.0.1 (macOS universal, Linux x86-64)
