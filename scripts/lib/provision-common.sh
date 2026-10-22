@@ -38,8 +38,11 @@ kit_python() {
   fi
 }
 OTA_APK_URL="https://github.com/VladOXPR/cuub-station-ota/raw/ota/cuub-station.apk"
-# "-" not ":-": an exported empty value (install-cuub-pilot.sh) builds an APK with the self-updater off.
+# "-" not ":-": an exported empty value builds an APK with the self-updater off.
 OTA_MANIFEST_URL="${OTA_MANIFEST_URL-https://raw.githubusercontent.com/VladOXPR/cuub-station-ota/ota/ota-manifest.json}"
+# CUUB-flow kiosks only. The fleet manifest above still serves the Energo app with
+# launcher=relink to stations that have not been swapped.
+PROD_OTA_MANIFEST_URL="https://raw.githubusercontent.com/VladOXPR/cuub-station-ota/ota/prod-manifest.json"
 
 pick_device() {
   if [[ -n "${1:-}" ]]; then
@@ -121,16 +124,20 @@ install_cuub_apk() {
   fi
 }
 
-# Pilot build: self-updater off (exported empty OTA_MANIFEST_URL), CUUB stays Home,
-# the CUUB gateway owns cmd/22 and cmd/13, kiosk token from Secret Manager.
+# Pilot build: updates from the prod manifest only, CUUB stays Home, the CUUB
+# gateway owns cmd/22 and cmd/13, kiosk token from Secret Manager. The unix-time
+# versionCode is what lets a production build published later replace it
+# (OtaUpdater.isRemoteNewer).
 export_pilot_build_env() {
   local project="$1" token
   token="$(gcloud secrets versions access latest --secret kiosk-api-token --project "$project")"
   [[ -n "$token" ]] || { echo "Could not read kiosk-api-token from Secret Manager" >&2; return 1; }
-  export OTA_MANIFEST_URL=""
+  export PILOT_BUILD=1
+  export OTA_MANIFEST_URL="$PROD_OTA_MANIFEST_URL"
   export KEEP_CUUB_HOME=true
   export CUUB_GATEWAY_MODE=true
-  export OTA_VERSION_NAME="${OTA_VERSION_NAME:-1.0.1-pilot}"
+  export OTA_VERSION_NAME="${OTA_VERSION_NAME:-1.0.2-pilot}"
+  export OTA_VERSION_CODE="${OTA_VERSION_CODE:-$(date +%s)}"
   export KIOSK_API_TOKEN="$token"
 }
 

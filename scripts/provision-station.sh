@@ -115,8 +115,9 @@ if [[ "$CONFIG_ONLY" -eq 0 ]]; then
     if [[ "$SLEEPER" -eq 1 ]]; then
       GRADLE_FLAGS+=(-PSLEEPER_MODE=true)
       echo "  sleeper build (versionCode stays 2; does not match GitHub kiosk)"
-    elif [[ -n "${OTA_MANIFEST_URL+set}" && -z "$OTA_MANIFEST_URL" ]]; then
-      echo "  pilot build: OTA off, version ${OTA_VERSION_NAME:-default}"
+    elif [[ -n "${PILOT_BUILD:-}" ]]; then
+      echo "  pilot build: version ${OTA_VERSION_NAME:-default}, updates from ${OTA_MANIFEST_URL:-nowhere (self-updater off)}"
+      [[ -n "${OTA_VERSION_CODE:-}" ]] && GRADLE_FLAGS+=(-POTA_VERSION_CODE="$OTA_VERSION_CODE")
     else
       if manifest_line="$(fetch_ota_manifest "$ROOT/.seed-cache" 2>/dev/null || true)"; then
         ota_code="${manifest_line%% *}"

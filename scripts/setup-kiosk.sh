@@ -7,7 +7,7 @@
 #
 #   1. Checks the laptop (adb, gcloud login) and reads the station ID from the tablet.
 #   2. Waits until the cabinet is on the CUUB broker; the pilot app cannot rent otherwise.
-#   3. Installs the CUUB pilot app (1.0.1-pilot, self-updater off) and configures
+#   3. Installs the CUUB pilot app (1.0.2-pilot, updates from the prod manifest) and configures
 #      Android: permissions, Home, no lock screen, T-Mobile IoT data. In a kiosk kit
 #      (scripts/build-kiosk-kit.sh) it installs the kit's APK instead of building one.
 #   4. Backs up the Relink app (kit: relink-backup/<station>/, repo: .seed-cache/relink-backup/)
@@ -119,12 +119,12 @@ fi
 step "3/6 CUUB pilot app"
 if [[ -f "$KIT_APK" ]]; then
   OTA_VERSION_NAME="$(tr -d '[:space:]' < "$ROOT/apk/version.txt")"
-  echo "  installing $OTA_VERSION_NAME from this kit (self-updater off)"
+  echo "  installing $OTA_VERSION_NAME from this kit"
   SETUP_KIOSK=1 bash "$ROOT/scripts/provision-station.sh" --apk "$KIT_APK" "$DEVICE" \
     || die "install or verify failed (see the FAIL lines above). Relink was disabled but not uninstalled; fix and run again."
 else
   export_pilot_build_env "$PROJECT"
-  echo "  building $OTA_VERSION_NAME with the self-updater off"
+  echo "  building $OTA_VERSION_NAME, updates from $OTA_MANIFEST_URL"
   SETUP_KIOSK=1 bash "$ROOT/scripts/provision-station.sh" --source local "$DEVICE" \
     || die "install or verify failed (see the FAIL lines above). Relink was disabled but not uninstalled; fix and run again."
 fi
@@ -170,6 +170,11 @@ fi
 home="$(home_package "$DEVICE")"
 [[ "$home" == "$CUUB_PKG" ]] || die "Home is ${home:-none}, not CUUB"
 echo "  Home is CUUB"
+if [[ "$(device_owner_pkg "$DEVICE")" == *"$CUUB_PKG"* ]]; then
+  ota_status="yes"
+else
+  ota_status="NO: CUUB is not device owner, so an OTA update would wait for a tap on the screen"
+fi
 
 step "5/6 First heartbeat in cuub-api"
 beat=0
@@ -219,6 +224,7 @@ json="$(station_json 2>/dev/null || true)"
 echo
 echo "=== $STATION done ==="
 echo "  kiosk    $(json_field "$json" appVersion), online=$(json_field "$json" online)"
+echo "  ota      $ota_status"
 echo "  reader   $(json_field "$json" readerStatus)"
 echo "  cabinet  online=$(json_field "$json" cabinet.online), slots=$(json_field "$json" cabinet.slots), banks=$(json_field "$json" cabinet.occupied)"
 [[ "$reader" == "connected" ]] || echo "  The reader is not ready: check the M2 is on the tablet's USB and charged."
